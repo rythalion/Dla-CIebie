@@ -8,7 +8,7 @@
   ║   👤 IMIĘ        → imię dziewczyny i Twoje imię: blok "USTAWIENIA"   ║
   ║   🎨 KOLORY      → sekcja CSS ":root" (zmienne kolorów)              ║
   ║   ✏️ TEKST       → wszystkie teksty edytujesz bezpośrednio w HTML    ║
-  ║   📷 ZDJĘCIA     → sekcja "GALERIA" (photo1.jpg … photo4.jpg)        ║
+  ║   📷 ZDJĘCIA     → sekcja "GALERIA" (photo1.jpg … photo6.jpg)        ║
   ║   💌 LIST        → sekcja "UKRYTA WIADOMOŚĆ"                         ║
   ║                                                                      ║
   ║  W tekstach możesz użyć znaczników:                                  ║
@@ -73,8 +73,7 @@ window.CONFIG = {
 /* ═══════════ RESET + BAZA ═══════════ */
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;background:#141a5e}
-html{scrollbar-gutter:stable}
-html.story-lock,html.story-lock body{overflow:hidden}
+html.lb-open,html.story-lock,html.story-lock body{overflow:hidden}
 html.story-lock,html.story-lock body{overscroll-behavior:none}
 body{
   margin:0;min-height:100vh;color:var(--text);
@@ -140,20 +139,18 @@ button{font:inherit;color:inherit}
 
 /* ═══════════ „SZKŁO”: wspólny styl ramek (obwódka z gradientu + ciemny środek) ═══════════
    Bez rozmywania tła (backdrop-filter) — wygląda tak samo, a jest dużo lżejsze dla telefonu. */
-.tf,.sec-head,.story-line p,.finale .container,.card,.letter,.cb-panel{
+.tf,.sec-head,.story-line p,.finale .container,.card,.letter,.cb-panel,.board,.board-note{
   position:relative;
   background:linear-gradient(160deg,var(--glass-a),var(--glass-b));
   box-shadow:0 26px 60px -32px rgba(6,4,44,.8),inset 0 1px 0 rgba(255,255,255,.07);
 }
-.tf::before,.sec-head::before,.story-line p::before,.finale .container::before,.card::before,.letter::before,.cb-panel::before,.shot-inner::before{
+.tf::before,.sec-head::before,.story-line p::before,.finale .container::before,.card::before,.letter::before,.cb-panel::before,.board::before,.board-note::before{
   content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
   background:linear-gradient(140deg,var(--edge-a),var(--edge-b) 45%,var(--edge-c));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
   -webkit-mask-composite:xor;mask-composite:exclude;
 }
 .tf,.sec-head,.story-line p,.finale .container{border-radius:28px}
-.cb-panel::before{display:none}
-.cb-panel{box-shadow:none!important;border:1px solid rgba(200,180,255,.28);background:linear-gradient(160deg,#2a2080,#170f4e)!important;contain:layout paint}
 
 /* ═══════════ WSPÓLNE ELEMENTY ═══════════ */
 .container{max-width:1120px;margin:0 auto}
@@ -332,14 +329,11 @@ button{font:inherit;color:inherit}
 /* Okienko z całym tekstem karty (jedyne miejsce z rozmyciem tła — działa tylko chwilę) */
 .cardbox{
   position:fixed;inset:0;z-index:190;display:grid;place-items:center;padding:24px;
-  background:rgba(6,4,34,.93);
+  background:rgba(8,6,44,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   opacity:0;transition:opacity .35s ease;
 }
-.cardbox{visibility:hidden;pointer-events:none;transition:opacity .25s ease,visibility 0s linear .25s}
-.cardbox.open{visibility:visible;pointer-events:auto;transition:opacity .25s ease,visibility 0s}
+.cardbox[hidden]{display:none}
 .cardbox.open{opacity:1}
-.cardbox{contain:layout paint;will-change:opacity}
-.cb-panel{will-change:transform}
 .cb-panel{
   width:min(680px,100%);max-height:84vh;max-height:84svh;overflow:auto;border-radius:26px;
   padding:clamp(28px,5vw,50px);
@@ -352,38 +346,77 @@ button{font:inherit;color:inherit}
 .cb-panel p{margin:0;color:#ebe6fd;font-size:clamp(1.02rem,2.2vw,1.15rem);line-height:1.85}
 .cb-count{position:absolute;bottom:22px;left:0;right:0;text-align:center;pointer-events:none;color:rgba(245,241,255,.75);font-size:.85rem;letter-spacing:.2em}
 
-/* ═══════════ 3. GALERIA ═══════════ */
-.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2vw,26px);padding-bottom:48px;align-items:start}
-.shot{min-height:0;aspect-ratio:3/4.2}
-.shot:nth-child(3n+2){margin-top:48px!important}
-.shot-inner{
-  position:relative;width:100%;height:100%;border-radius:24px;overflow:hidden;cursor:zoom-in;
-  background:radial-gradient(circle at 30% 20%,#2f2488,transparent 62%),linear-gradient(145deg,#231a68,#0d0b34 62%,#1c1156);
-  box-shadow:0 28px 60px -30px rgba(8,6,50,.85);
-  transform:rotate(var(--tilt,0deg));transition:transform .7s var(--ease);
+/* ═══════════ 3. TABLICA ZE ZDJĘCIAMI ═══════════ */
+.board{
+  border-radius:30px;padding:clamp(34px,5vw,64px) clamp(18px,4vw,56px) clamp(40px,5.5vw,70px);
+  background:
+    radial-gradient(rgba(228,214,255,.10) 1px,transparent 1.4px) 0 0/22px 22px,
+    linear-gradient(160deg,var(--glass-a),var(--glass-b));
 }
-.shot:nth-child(odd){--tilt:-.9deg}
-.shot:nth-child(even){--tilt:.9deg}
-.shot:hover .shot-inner,.shot:focus-visible .shot-inner{transform:rotate(0deg) scale(1.015)}
-.shot-inner::before{z-index:2}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(26px,3.4vw,52px) clamp(22px,3.2vw,48px);align-items:start;max-width:900px;margin:0 auto}
+/* każde zdjęcie to „polaroid” przypięty pinezką */
+.shot{
+  position:relative;margin:0;padding:10px 10px 0;border-radius:5px;cursor:zoom-in;
+  background:linear-gradient(180deg,#fbf8ff,#ece5ff);
+  box-shadow:0 22px 40px -18px rgba(4,3,30,.9),0 2px 6px rgba(4,3,30,.35);
+  transform:translateY(var(--dy,0)) rotate(var(--tilt,0deg));
+  transition:transform .6s var(--ease),box-shadow .6s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.shot:nth-child(6n+1){--tilt:-3deg;--dy:6px}
+.shot:nth-child(6n+2){--tilt:2.2deg;--dy:30px}
+.shot:nth-child(6n+3){--tilt:-1.6deg;--dy:0px}
+.shot:nth-child(6n+4){--tilt:2.6deg;--dy:14px}
+.shot:nth-child(6n+5){--tilt:-2.2deg;--dy:38px}
+.shot:nth-child(6n+6){--tilt:1.4deg;--dy:4px}
+.shot::before{ /* pinezka */
+  content:"";position:absolute;top:-9px;left:50%;width:18px;height:18px;margin-left:-9px;border-radius:50%;z-index:3;
+  background:radial-gradient(circle at 35% 30%,#ffc2dd,#e0559f 55%,#8e2a6a);
+  box-shadow:0 4px 6px rgba(4,3,30,.55),0 0 14px rgba(255,120,190,.45);
+}
+.shot:hover,.shot:focus-visible{transform:translateY(calc(var(--dy,0px) - 8px)) rotate(0deg) scale(1.04);z-index:2;box-shadow:0 34px 60px -20px rgba(4,3,30,.95),0 0 40px -6px rgba(255,150,210,.45)}
+.shot-inner{
+  position:relative;width:100%;aspect-ratio:3/4;border-radius:2px;overflow:hidden;
+  background:radial-gradient(circle at 30% 20%,#2f2488,transparent 62%),linear-gradient(145deg,#231a68,#0d0b34 62%,#1c1156);
+}
+.shot-cap{display:grid;place-items:center;height:clamp(34px,4vw,48px);color:#e0559f}
+.shot-cap .ico{width:15px;height:15px;opacity:.8}
+
+/* podpis pod tablicą */
+.board-note{
+  max-width:780px;margin:clamp(40px,7vh,72px) auto 0;border-radius:26px;
+  padding:clamp(30px,5vw,56px) clamp(24px,5.5vw,62px);
+}
+.board-note p{margin:0 0 1.1em;font-family:var(--font-display);font-weight:400;font-size:clamp(1.15rem,2.4vw,1.38rem);line-height:1.75;color:#ede8ff}
+.board-note .board-love{margin:1.4em 0 0;text-align:center;font-style:italic;font-size:clamp(1.45rem,3.4vw,2rem);line-height:1.4;color:#ffd9ea}
+.board-ps{margin-top:2.2em;padding-top:1.8em;border-top:1px solid rgba(228,214,255,.22)}
+.board-ps .ps-mark{display:block;margin-bottom:.5em;font-family:var(--font-display);font-style:italic;font-size:1.5rem;color:var(--pink)}
+.board-ps p{font-size:clamp(1.05rem,2.2vw,1.22rem);color:#e4defb}
+.board-ps .ps-end{margin:0;font-style:italic;color:#ffc7e0}
+.board-next{display:flex;justify-content:center;margin-top:clamp(30px,5vh,48px)}
 .shot-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:rgba(228,214,255,.6);font-size:.85rem;letter-spacing:.12em}
 .shot-ph .ico{width:34px;height:34px;color:var(--pink);opacity:.75}
 .shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease,transform 1.3s var(--ease)}
 .shot img.loaded{opacity:1}
 .shot:hover img{transform:scale(1.05)}
 
-/* Lightbox */
+/* Podgląd zdjęcia na cały ekran */
 .lightbox{
-  position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:24px;
-  background:rgba(4,3,20,.95);
+  position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:0;
+  background:#04031a;
   opacity:0;transition:opacity .35s ease;
 }
-.lightbox{visibility:hidden;pointer-events:none;transition:opacity .25s ease,visibility 0s linear .25s}
-.lightbox.open{visibility:visible;pointer-events:auto;transition:opacity .25s ease,visibility 0s}
+.lightbox[hidden]{display:none}
 .lightbox.open{opacity:1}
-.lb-fig{margin:0;text-align:center;transition:opacity .22s ease,transform .22s ease}
+.lightbox:fullscreen{background:#04031a}
+.lightbox::backdrop{background:#04031a}
+.lb-fig{margin:0;width:100%;height:100%;display:grid;place-items:center;transition:opacity .22s ease,transform .22s ease}
 .lb-fig.swap{opacity:0;transform:scale(.97)}
-.lb-fig img{max-width:min(92vw,1200px);max-height:80vh;margin:0 auto;border-radius:16px;box-shadow:0 30px 100px -20px rgba(120,90,255,.5)}
+.lb-fig img{width:100vw;height:100vh;height:100dvh;object-fit:contain;margin:0}
+.lb-full{top:max(18px,env(safe-area-inset-top));right:78px}
+.lb-full[hidden]{display:none}
+.lightbox .lb-btn{background:rgba(20,16,70,.6)}
+.lightbox .lb-count{padding:.35em 1em;width:fit-content;margin:0 auto;border-radius:999px;background:rgba(12,10,50,.6)}
 .lb-ph{
   width:min(84vw,720px);aspect-ratio:4/3;border-radius:16px;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;
   color:rgba(228,214,255,.65);letter-spacing:.12em;
@@ -480,12 +513,13 @@ button{font:inherit;color:inherit}
 /* ═══════════ RESPONSYWNOŚĆ ═══════════ */
 @media (max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:760px){
-  .gallery{grid-template-columns:1fr 1fr;gap:12px;padding-bottom:0}
-  .shot:nth-child(even){margin-top:26px!important}
-  .shot:nth-child(odd){margin-top:0}
+  .gallery{grid-template-columns:1fr 1fr;gap:30px 18px}
+  .shot{padding:7px 7px 0}
+  .shot:nth-child(odd){--dy:0px}.shot:nth-child(even){--dy:18px}
   .lb-prev{left:8px}.lb-next{right:8px}
   .lb-btn{width:44px;height:44px;margin-top:-22px}
   .lb-close{margin-top:0}
+  .lb-full{right:70px;margin-top:0}
   .cardbox{padding:16px 16px 84px}
   .cardbox .lb-prev,.cardbox .lb-next{top:auto;bottom:max(18px,env(safe-area-inset-bottom));margin-top:0}
   .cardbox .lb-prev{left:calc(50% - 116px)}
@@ -521,6 +555,8 @@ button{font:inherit;color:inherit}
     <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
     <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+    <symbol id="i-shrink" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></symbol>
   </defs>
 </svg>
 
@@ -544,9 +580,9 @@ button{font:inherit;color:inherit}
   <div class="intro-inner">
     <div class="tf">
       <!-- ✏️ TEKST: powitanie (imię bierze się z USTAWIEŃ na górze pliku) -->
-      <h1><span id="introTitle" data-split>Hej, {{IMIE}}</span><span class="heart-glyph" aria-hidden="true">❤️</span></h1>
+      <h1><span id="introTitle" data-split>Cześć Oluś!</span> <span class="heart-glyph" aria-hidden="true">❤️</span></h1>
       <!-- ✏️ TEKST: podtytuł -->
-      <p class="intro-sub">Mam dla Ciebie mały prezent.</p>
+      <p class="intro-sub">{{IMIE}}, Pysiu, Słońce najdroższe…</p>
     </div>
     <!-- ✏️ TEKST: przycisk -->
     <div class="btn-wrap"><button class="btn" id="openBtn" type="button">Otwórz prezent ✨</button></div>
@@ -567,13 +603,14 @@ button{font:inherit;color:inherit}
       Dodać kolejną linijkę? Skopiuj cały <div class="story-line"> ... </div> i dodaj jeszcze jedną kropkę <i></i> w .story-dots poniżej.
       Klasa "big" = duży napis, "quote" = różowa kursywa.
     -->
-    <div class="story-line big" aria-live="polite"><p>Dzisiaj jest Twój dzień.</p></div>
-    <div class="story-line"><p>Więc pomyślałem, że zamiast zwykłego</p></div>
-    <div class="story-line quote"><p>„wszystkiego najlepszego”</p></div>
-    <div class="story-line"><p>zrobię coś trochę bardziej od siebie.</p></div>
+    <div class="story-line" aria-live="polite"><p>Jak bardzo dobrze wiesz, dziś wypada dzień</p></div>
+    <div class="story-line big"><p>TWOICH URODZIN</p></div>
+    <div class="story-line"><p>Z racji tej, że jestem świadomy tego, że nie lubisz prezentów,</p></div>
+    <div class="story-line"><p>to ten akurat musisz przyjąć,</p></div>
+    <div class="story-line quote"><p>bo jest on ode mnie i&nbsp;jest on bezdyskusyjny! <span style="white-space:nowrap">;-PPP</span></p></div>
 
     <div class="story-hint" aria-hidden="true">
-      <div class="story-dots"><i></i><i></i><i></i><i></i></div>
+      <div class="story-dots"><i></i><i></i><i></i><i></i><i></i></div>
       <span class="story-hint-text">Kliknij, aby czytać dalej</span>
     </div>
   </section>
@@ -664,7 +701,7 @@ button{font:inherit;color:inherit}
 
   <!-- ═════════════════════════════════════════════════════════════════
        3. GALERIA
-       📷 ZDJĘCIA: wrzuć pliki photo1.jpg … photo4.jpg do tego samego folderu co index.html
+       📷 ZDJĘCIA: wrzuć pliki photo1.jpg … photo6.jpg do tego samego folderu co index.html
           (albo zmień nazwy w src="..." poniżej). Dopóki plików nie ma, widać eleganckie placeholdery.
           Chcesz więcej zdjęć? Skopiuj cały blok <figure class="shot reveal"> ... </figure>.
           Wskazówka: styl object-position ustawia, którą część zdjęcia widać w kafelku (np. 50% 38% = trochę nad środkiem).
@@ -673,55 +710,78 @@ button{font:inherit;color:inherit}
     <span class="orb" data-parallax="-0.12" style="width:600px;height:600px;right:-220px;top:10%;background:radial-gradient(circle,rgba(255,130,195,.14),transparent 68%)"></span>
     <div class="container">
       <div class="sec-head reveal">
-        <!-- ✏️ TEKST: tytuł i podtytuł galerii -->
-        <h2 class="sec-title">Kilka kadrów</h2>
-        <p class="sec-sub">Kliknij zdjęcie, żeby zobaczyć je w całości.</p>
+        <!-- ✏️ TEKST: tytuł i podtytuł tablicy -->
+        <h2 class="sec-title">Tablica</h2>
+        <p class="sec-sub">Kliknij zdjęcie, żeby zobaczyć je na całym ekranie.</p>
       </div>
 
-      <div class="gallery" id="gallery">
-        <figure class="shot reveal" tabindex="0" role="button" aria-label="Powiększ zdjęcie 1" style="margin:0">
-          <div class="shot-inner">
-            <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo1.jpg</span></div>
-            <img src="photo1.jpg" alt="Zdjęcie 1" width="675" height="1200" loading="lazy" decoding="async" style="object-position:50% 38%">
-          </div>
-        </figure>
+      <!-- Tablica: zdjęcia jak polaroidy przypięte pinezkami -->
+      <div class="board reveal">
+        <div class="gallery" id="gallery">
+          <figure class="shot" tabindex="0" role="button" aria-label="Pokaż zdjęcie 1 na całym ekranie">
+            <div class="shot-inner">
+              <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo1.jpg</span></div>
+              <img src="photo1.jpg" alt="Zdjęcie 1" width="787" height="1400" loading="lazy" decoding="async" style="object-position:50% 38%">
+            </div>
+            <figcaption class="shot-cap" aria-hidden="true"><svg class="ico fill"><use href="#i-heart"/></svg></figcaption>
+          </figure>
 
-        <figure class="shot reveal" tabindex="0" role="button" aria-label="Powiększ zdjęcie 2" style="margin:0;--d:.1s">
-          <div class="shot-inner">
-            <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo2.jpg</span></div>
-            <img src="photo2.jpg" alt="Zdjęcie 2" width="356" height="382" loading="lazy" decoding="async" style="object-position:50% 40%">
-          </div>
-        </figure>
+          <figure class="shot" tabindex="0" role="button" aria-label="Pokaż zdjęcie 2 na całym ekranie">
+            <div class="shot-inner">
+              <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo2.jpg</span></div>
+              <img src="photo2.jpg" alt="Zdjęcie 2" width="356" height="382" loading="lazy" decoding="async" style="object-position:50% 40%">
+            </div>
+            <figcaption class="shot-cap" aria-hidden="true"><svg class="ico fill"><use href="#i-heart"/></svg></figcaption>
+          </figure>
 
-        <figure class="shot reveal" tabindex="0" role="button" aria-label="Powiększ zdjęcie 3" style="margin:0">
-          <div class="shot-inner">
-            <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo3.jpg</span></div>
-            <img src="photo3.jpg" alt="Zdjęcie 3" width="675" height="1200" loading="lazy" decoding="async" style="object-position:50% 42%">
-          </div>
-        </figure>
+          <figure class="shot" tabindex="0" role="button" aria-label="Pokaż zdjęcie 3 na całym ekranie">
+            <div class="shot-inner">
+              <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo3.jpg</span></div>
+              <img src="photo3.jpg" alt="Zdjęcie 3" width="787" height="1400" loading="lazy" decoding="async" style="object-position:50% 42%">
+            </div>
+            <figcaption class="shot-cap" aria-hidden="true"><svg class="ico fill"><use href="#i-heart"/></svg></figcaption>
+          </figure>
 
-        <figure class="shot reveal" tabindex="0" role="button" aria-label="Powiększ zdjęcie 4" style="margin:0;--d:.1s">
-          <div class="shot-inner">
-            <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo4.jpg</span></div>
-            <img src="photo4.jpg" alt="Zdjęcie 4" width="675" height="1200" loading="lazy" decoding="async" style="object-position:50% 36%">
-          </div>
-        </figure>
+          <figure class="shot" tabindex="0" role="button" aria-label="Pokaż zdjęcie 4 na całym ekranie">
+            <div class="shot-inner">
+              <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo4.jpg</span></div>
+              <img src="photo4.jpg" alt="Zdjęcie 4" width="787" height="1400" loading="lazy" decoding="async" style="object-position:50% 36%">
+            </div>
+            <figcaption class="shot-cap" aria-hidden="true"><svg class="ico fill"><use href="#i-heart"/></svg></figcaption>
+          </figure>
 
-        <figure class="shot reveal" tabindex="0" role="button" aria-label="Powiększ zdjęcie 5" style="margin:0">
-          <div class="shot-inner">
-            <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo5.jpg</span></div>
-            <img src="photo5.jpg" alt="Zdjęcie 5" width="675" height="1200" loading="lazy" decoding="async" style="object-position:50% 36%">
-          </div>
-        </figure>
+          <figure class="shot" tabindex="0" role="button" aria-label="Pokaż zdjęcie 5 na całym ekranie">
+            <div class="shot-inner">
+              <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo5.jpg</span></div>
+              <img src="photo5.jpg" alt="Zdjęcie 5" width="675" height="1200" loading="lazy" decoding="async" style="object-position:50% 40%">
+            </div>
+            <figcaption class="shot-cap" aria-hidden="true"><svg class="ico fill"><use href="#i-heart"/></svg></figcaption>
+          </figure>
 
-        <figure class="shot reveal" tabindex="0" role="button" aria-label="Powiększ zdjęcie 6" style="margin:0;--d:.1s">
-          <div class="shot-inner">
-            <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo6.jpg</span></div>
-            <img src="photo6.jpg" alt="Zdjęcie 6" width="675" height="1200" loading="lazy" decoding="async" style="object-position:50% 62%">
-          </div>
-        </figure>
-
+          <figure class="shot" tabindex="0" role="button" aria-label="Pokaż zdjęcie 6 na całym ekranie">
+            <div class="shot-inner">
+              <div class="shot-ph"><svg class="ico fill"><use href="#i-heart"/></svg><span>photo6.jpg</span></div>
+              <img src="photo6.jpg" alt="Zdjęcie 6" width="675" height="1200" loading="lazy" decoding="async" style="object-position:50% 45%">
+            </div>
+            <figcaption class="shot-cap" aria-hidden="true"><svg class="ico fill"><use href="#i-heart"/></svg></figcaption>
+          </figure>
+        </div>
       </div>
+
+      <!-- ✏️ TEKST: podpis pod tablicą (każdy akapit to osobny <p>) -->
+      <div class="board-note reveal">
+        <p>Wiem, jak bardzo nie lubisz na siebie patrzeć, wiesz też, że ja na siebie mam taki sam wstręt — to nas łączy. Ale od pewnego momentu staram się na siebie patrzeć. Na siebie, czyli mam na myśli to, kim jestem.</p>
+        <p>Te zdjęcia mogą być wyciągnięte „znikąd”, ale to te, na których według mnie wyglądasz najpiękniej, najcudowniej i, żeby nie być gołosłownym, najbardziej zjawiskowa ze wszystkich!</p>
+        <p class="board-love">Kocham Cię właśnie taką, taką jak na tych zdjęciach…</p>
+        <div class="board-ps">
+          <span class="ps-mark">P.S.</span>
+          <p>Przepraszam za dni, w których marudziłem, że jest mi źle — wiem, jak bardzo może to kogoś denerwować. To jest moje ostatnie przeproszenie Ciebie w taki sposób i obiecuję, pewnego dnia się zobaczymy, OBIECUJĘ… Ale musisz mi powiedzieć, czy tego chcesz, okej?</p>
+          <p class="ps-end">Cool, no to teraz pora na mój ostatni prezent!</p>
+        </div>
+      </div>
+
+      <!-- ✏️ TEKST: przycisk pod tablicą (przewija do listu) -->
+      <div class="board-next reveal"><button class="btn" id="boardNext" type="button">Pokaż ostatni prezent ❤️</button></div>
     </div>
   </section>
 
@@ -812,7 +872,7 @@ button{font:inherit;color:inherit}
 <div class="scroll-cue" id="scrollCue" aria-hidden="true"><span>Przewiń w dół</span><i></i></div>
 
 <!-- ═══════════ OKIENKO KARTY (pełny tekst po kliknięciu karty) ═══════════ -->
-<div class="cardbox" id="cardbox" role="dialog" aria-modal="true" aria-label="Karta">
+<div class="cardbox" id="cardbox" role="dialog" aria-modal="true" aria-label="Karta" hidden>
   <button class="lb-btn lb-close cb-close" type="button" aria-label="Zamknij"><svg class="ico"><use href="#i-close"/></svg></button>
   <button class="lb-btn lb-prev cb-prev" type="button" aria-label="Poprzednia karta"><svg class="ico"><use href="#i-left"/></svg></button>
   <button class="lb-btn lb-next cb-next" type="button" aria-label="Następna karta"><svg class="ico"><use href="#i-right"/></svg></button>
@@ -825,8 +885,9 @@ button{font:inherit;color:inherit}
 </div>
 
 <!-- ═══════════ LIGHTBOX (powiększanie zdjęć) ═══════════ -->
-<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Podgląd zdjęcia">
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Podgląd zdjęcia" hidden>
   <button class="lb-btn lb-close" type="button" aria-label="Zamknij"><svg class="ico"><use href="#i-close"/></svg></button>
+  <button class="lb-btn lb-full" type="button" aria-label="Pełny ekran" hidden><svg class="ico"><use href="#i-expand"/></svg></button>
   <button class="lb-btn lb-prev" type="button" aria-label="Poprzednie zdjęcie"><svg class="ico"><use href="#i-left"/></svg></button>
   <button class="lb-btn lb-next" type="button" aria-label="Następne zdjęcie"><svg class="ico"><use href="#i-right"/></svg></button>
   <figure class="lb-fig" id="lbFig">
@@ -1199,9 +1260,8 @@ const Story = (() => {
     if ([' ', 'Enter', 'ArrowRight', 'ArrowDown', 'PageDown'].includes(e.key)) { e.preventDefault(); next(); }
   });
   // blokada przewijania, dopóki nie przeklikasz całej sekcji
-  window.addEventListener('wheel', e => { if (locked || (root.classList.contains('lb-open') && !e.target.closest('.cb-panel'))) e.preventDefault(); }, { passive: false });
-  window.addEventListener('touchmove', e => { if (locked || (root.classList.contains('lb-open') && !e.target.closest('.cb-panel'))) e.preventDefault(); }, { passive: false });
-  window.addEventListener('keydown', e => { if (root.classList.contains('lb-open') && [' ', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'End', 'Home'].includes(e.key)) e.preventDefault(); });
+  window.addEventListener('wheel', e => { if (locked) e.preventDefault(); }, { passive: false });
+  window.addEventListener('touchmove', e => { if (locked) e.preventDefault(); }, { passive: false });
   return { start };
 })();
 
@@ -1331,13 +1391,16 @@ if (FINE) {
   function open(i, e) {
     last = document.activeElement;
     fill(i);
+    box.hidden = false;
     root.classList.add('lb-open');
-    requestAnimationFrame(() => { box.classList.add('open'); $('.cb-close', box).focus({ preventScroll: true }); });
-    
+    requestAnimationFrame(() => box.classList.add('open'));
+    $('.cb-close', box).focus({ preventScroll: true });
+    FX.burst(e && e.clientX !== undefined ? e.clientX : innerWidth / 2, e && e.clientY !== undefined ? e.clientY : innerHeight / 2, 18, { speed: 190, hearts: .35 });
   }
   function close() {
     box.classList.remove('open');
     root.classList.remove('lb-open');
+    setTimeout(() => { box.hidden = true; }, 350);
     if (last) last.focus({ preventScroll: true });
   }
   function step(d) {
@@ -1353,7 +1416,7 @@ if (FINE) {
   $('.cb-next', box).addEventListener('click', () => step(1));
   box.addEventListener('click', e => { if (e.target === box) close(); });
   document.addEventListener('keydown', e => {
-    if (!box.classList.contains('open')) return;
+    if (box.hidden) return;
     if (e.key === 'Escape') close();
     else if (e.key === 'ArrowRight') step(1);
     else if (e.key === 'ArrowLeft') step(-1);
@@ -1416,16 +1479,39 @@ function fillLB(i) {
     lbPh.style.display = 'flex'; lbPhText.textContent = img.getAttribute('src');
   }
 }
+/* tryb pełnoekranowy (na iPhonie przeglądarka go nie wspiera — wtedy zdjęcie i tak wypełnia całe okno) */
+const lbFull = $('.lb-full', lb);
+const fsEl  = () => document.fullscreenElement || document.webkitFullscreenElement;
+const fsReq = lb.requestFullscreen || lb.webkitRequestFullscreen;
+const fsExit = document.exitFullscreen || document.webkitExitFullscreen;
+function enterFS() { if (fsReq && !fsEl()) { try { const p = fsReq.call(lb); if (p && p.catch) p.catch(() => {}); } catch (_) {} } }
+function leaveFS() { if (fsExit && fsEl()) { try { const p = fsExit.call(document); if (p && p.catch) p.catch(() => {}); } catch (_) {} } }
+function syncFS() {
+  const on = !!fsEl();
+  $('use', lbFull).setAttribute('href', on ? '#i-shrink' : '#i-expand');
+  lbFull.setAttribute('aria-label', on ? 'Wyjdź z pełnego ekranu' : 'Pełny ekran');
+}
+if (fsReq) {
+  lbFull.hidden = false;
+  lbFull.addEventListener('click', () => { fsEl() ? leaveFS() : enterFS(); });
+  document.addEventListener('fullscreenchange', syncFS);
+  document.addEventListener('webkitfullscreenchange', syncFS);
+}
+
 function openLB(i) {
   lastFocus = document.activeElement;
   fillLB(i);
+  lb.hidden = false;
   root.classList.add('lb-open');
-  requestAnimationFrame(() => { lb.classList.add('open'); $('.lb-close', lb).focus({ preventScroll: true }); });
+  enterFS();
+  requestAnimationFrame(() => lb.classList.add('open'));
+  $('.lb-close', lb).focus({ preventScroll: true });
 }
 function closeLB() {
+  leaveFS();
   lb.classList.remove('open');
   root.classList.remove('lb-open');
-  setTimeout(() => { if (!lb.classList.contains('open')) lbImg.removeAttribute('src'); }, 400);
+  setTimeout(() => { lb.hidden = true; lbImg.removeAttribute('src'); }, 350);
   if (lastFocus) lastFocus.focus({ preventScroll: true });
 }
 function stepLB(d) {
@@ -1441,7 +1527,7 @@ $('.lb-prev', lb).addEventListener('click', () => stepLB(-1));
 $('.lb-next', lb).addEventListener('click', () => stepLB(1));
 lb.addEventListener('click', e => { if (e.target === lb) closeLB(); });
 document.addEventListener('keydown', e => {
-  if (!lb.classList.contains('open')) return;
+  if (lb.hidden) return;
   if (e.key === 'Escape') closeLB();
   else if (e.key === 'ArrowRight') stepLB(1);
   else if (e.key === 'ArrowLeft') stepLB(-1);
@@ -1485,6 +1571,15 @@ secretBtn.addEventListener('click', () => {
   }, 3000 * k);
   setTimeout(() => letterShell.classList.add('settled'), 4300 * k + 100);
 });
+
+/* Przycisk pod tablicą: przewija do ostatniego prezentu (listu) */
+(() => {
+  const b = $('#boardNext'), t = $('#secret');
+  b.addEventListener('click', e => {
+    FX.burst(e.clientX || innerWidth / 2, e.clientY || innerHeight / 2, 24, { speed: 230, hearts: .4 });
+    t.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+  });
+})();
 
 /* Przycisk pod listem: przewija do życzeń */
 (() => {
